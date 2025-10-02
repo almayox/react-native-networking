@@ -15,6 +15,7 @@ export default function Index() {
   const [postBody, setPostBody] = useState("");
   const [postTitle, setPostTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchData = async (limit = 10) => {
     try {
@@ -22,8 +23,11 @@ export default function Index() {
       const data = await response.json();
       setPostList(data);
       setIsLoading(false);
+      setError("");
     } catch (error) {
       Alert.alert("Error", "Failed to fetch data. Please try again later.");
+      setIsLoading(false);
+      setError("Failed to fetch data");
     }
   }
   useEffect(() => {
@@ -36,7 +40,7 @@ export default function Index() {
     fetchData()
     setRefreshing(false);
   }
-  // ============== POST call for new post ==============
+  // ============== POST call for add post ==============
   const addPost = async () => {
     setIsPosting(true);
     try {
@@ -54,8 +58,12 @@ export default function Index() {
       setPostList([newPost, ...postList]);
       setPostTitle("");
       setPostBody("");
+      setIsPosting(false);
+      setError("");
+      Alert.alert("Success", "Post added successfully!");
     } catch (error) {
       Alert.alert("Error", "Failed to add post. Please try again later.");
+      setError("Failed to add post");
     } finally {
       setIsPosting(false);
     } 
@@ -81,6 +89,11 @@ export default function Index() {
   // ============== Render starts ==============
   return (
     <View style={styles.container}>
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : (
       <>
       <View style={styles.inputContainer}>
         <TextInput
@@ -121,6 +134,7 @@ export default function Index() {
         />
       </View>
       </>
+      )}
     </View>
   );
 }
@@ -198,5 +212,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 12,
     paddingHorizontal: 8,
+  },
+  errorContainer: {
+    padding: 16,
+    backgroundColor: "#ffdddd",
+    borderRadius: 4,
+    margin: 16,
+  },
+  errorText: {
+    color: "#d00",
+    fontSize: 16,
+    textAlign: "center",
   },
 });

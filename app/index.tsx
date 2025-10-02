@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, StatusBar, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Button, FlatList, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function Index() {
   // ============== API call ==============
@@ -12,6 +12,10 @@ export default function Index() {
   const [postList, setPostList] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [postBody, setPostBody] = useState("");
+  const [postTitle, setPostTitle] = useState("");
+  const [isPosting, setIsPosting] = useState(false);
+
   const fetchData = async (limit = 10) => {
     try {
       const response = await fetch(`https://jsonplaceholder.typicode.com/posts?_limit=${limit}`);
@@ -32,6 +36,30 @@ export default function Index() {
     fetchData()
     setRefreshing(false);
   }
+  // ============== POST call for new post ==============
+  const addPost = async () => {
+    setIsPosting(true);
+    try {
+      const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: postTitle,
+          body: postBody,
+        }),
+      });
+      const newPost = await response.json();
+      setPostList([newPost, ...postList]);
+      setPostTitle("");
+      setPostBody("");
+    } catch (error) {
+      Alert.alert("Error", "Failed to add post. Please try again later.");
+    } finally {
+      setIsPosting(false);
+    } 
+  }
 
   // ============== Loading state ==============
   if (isLoading) {
@@ -46,13 +74,33 @@ export default function Index() {
       </View>
     );
   }
-  // ============== Testing empty state ==============
+  // ============== Testing empty list state ==============
   const emptyList: Post[] = [];
 
 
   // ============== Render starts ==============
   return (
     <View style={styles.container}>
+      <>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Post Title"
+          value={postTitle}
+          onChangeText={setPostTitle}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Post Body"
+          value={postBody}
+          onChangeText={setPostBody}
+        />
+        <Button
+          title={isPosting ? "Posting..." : "Add Post"}
+          onPress={addPost}
+          disabled={isPosting}
+        />
+      </View>
       <View style={styles.listContainer}>
         <FlatList 
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
@@ -72,6 +120,7 @@ export default function Index() {
           }}
         />
       </View>
+      </>
     </View>
   );
 }
@@ -135,5 +184,19 @@ const styles = StyleSheet.create({
     width: 200,
     alignSelf: "center",
     margin: 16,
+  },
+  inputContainer: {
+    padding: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  input: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 4,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
 });
